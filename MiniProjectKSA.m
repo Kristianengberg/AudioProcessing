@@ -19,17 +19,17 @@ delay = round(Fs/A);
 b  = firls(42, [0 1/delay 2/delay 1], [0 0 1 1]);
 a  = [1 zeros(1, delay) -0.5 -0.5];
 
-% [H,W] = freqz(b, a, F, Fs);
-% plot(W, 20*log10(abs(H)));
-% title('Harmonics of an open A string');
-% xlabel('Frequency (Hz)');
-% ylabel('Magnitude (dB)');
+[H,W] = freqz(b, a, F, Fs);
+plot(W, 20*log10(abs(H)));
+title('Harmonics of an open A string');
+xlabel('Frequency (Hz)');
+ylabel('Magnitude (dB)');
 
 zi = rand(max(length(b),length(a))-1,1);
 note = filter(b, a, x, zi);
 
-%note = note-mean(note);
-%note = note/max(abs(note));
+note = note-mean(note);
+note = note/max(abs(note));
 
 hplayer = audioplayer(note, Fs); 
     play(hplayer)
