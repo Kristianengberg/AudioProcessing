@@ -1,16 +1,21 @@
 function MiniProjectKSA
 
-clear all
 close all
-clc
-% MISC PARAMETERS
-fontsize=[10];
+
+
+fontsize=10;
 timekeycolor=[0.7,0.0,0.0];
 soundkeycolor=[0.0,0.0,0.7];
 keycolor1=[1.0,1.0,1.0];
 keycolor2=[1.0,1.0,1.0];
 
+
+
 Fs = 44100;
+
+SPECTANLZR = dsp.SpectrumAnalyzer('SampleRate', Fs);
+
+F = linspace(1/Fs, 1000, 2^12);
 
 E  = 82;
 A  = 110;
@@ -19,7 +24,18 @@ G  = 196;
 B  = 247;
 Eh  = 330;
 
-F = linspace(1/Fs, 1000, 2^12);
+effect = 0;
+fc = 900;
+
+% Flanger properties
+fDelay = 0.4;
+range = 0.4;
+%rate = 0.25;
+sweep_freq = 0.4;
+%wetDryMix = 0.5;
+
+
+
 
 
 % FIGURE
@@ -32,42 +48,60 @@ hFigure=figure(...
     'NumberTitle','off',...
     'Name','Program');
 
+
 hButtonGroup1=uibuttongroup(...
     'Parent',hFigure,...
     'Units','Pixels',...
     'Position',[330 0 300 300],...
     'BackgroundColor',[0,0,0],...
-    'SelectionChangeFcn',@TimeSelection);
+    'SelectionChangeFcn',@ButtonFunction);
 
 time1=uicontrol(...
     'Style','togglebutton',...
     'Parent',hButtonGroup1,...
     'Units','Pixels',...
-    'Position',[130 198 100 15],...
-    'String','T I M E 1',...
+    'Position',[130 200 100 15],...
+    'String','butter',...
     'FontSize',8,...
     'ForegroundColor',timekeycolor,...
     'BackgroundColor',timekeycolor);
 
+
 time2=uicontrol(...
-    'Style','pushbutton',...
+    'Style','togglebutton',...
     'Parent',hButtonGroup1,...
     'Units','Pixels',...
-    'Position',[130 169 100 15],...
-    'String','T I M E 1',...
+    'Position',[130 155 100 15],...
+    'String','plot',...
     'FontSize',8,...
     'ForegroundColor',timekeycolor,...
     'BackgroundColor',timekeycolor);
+
 
 txt = uicontrol('Style','text',...
     'Parent',hButtonGroup1,...
-    'Position',[0 168 120 20],...
+    'Position',[5 154 120 20],...
     'String','Plot current wave');
 
 txt = uicontrol('Style','text',...
     'Parent',hButtonGroup1,...
-    'Position',[0 198 120 20],...
-    'String','Chorus');
+    'Position',[5 198 120 20],...
+    'String','Butter');
+
+time3=uicontrol(...
+    'Style','togglebutton',...
+    'Parent',hButtonGroup1,...
+    'Units','Pixels',...
+    'Position',[130 102 100 15],...
+    'String','reset',...
+    'FontSize',8,...
+    'ForegroundColor',timekeycolor,...
+    'BackgroundColor',timekeycolor);
+
+txt = uicontrol('Style','text',...
+    'Parent',hButtonGroup1,...
+    'Position',[5 100 120 20],...
+    'String','Reset');
 
 
 snd1=uicontrol(...
@@ -147,68 +181,108 @@ t6=uicontrol(...
     'ForegroundColor',keycolor1,...
     'BackgroundColor',keycolor2);
 
-% FUNCTIONS
-t=0.6;
-    function TimeSelection(hObject,eventdata)
+    function n = CurrentNote(note)
+        n = note;
+    end
+
+
+    function  [x,y] = Plotter
+        delay = round(Fs/A);
+        x  = firls(42, [0 1/delay 2/delay 1], [0 0 1 1]);
+        y  = [1 zeros(1, delay) -0.5 -0.5];
+    end
+
+    function ButtonFunction(hObject,eventdata)
         T=get(eventdata.NewValue,'String');
         
         switch T
-            case 'T I M E 1'
-                t=0.2;
-            case 'T I M E 2'
-                t=0.4;
-            case 'T I M E 3'
-                t=0.6;
-            case 'T I M E 4'
-                t=1.0;
-            case 'T U N E R T I M E'
-                t=10.0;
+            case 'plot'
+                
+                [x, y] = Plotter;
+                f1 = figure;
+                [H,W] = freqz(x, y, F, Fs);
+                plot(W, 20*log10(abs(H)));
+                title('Harmonics of an open A string');
+                xlabel('Frequency (Hz)');
+                ylabel('Magnitude (dB)');
+                %                 f1 = figure;
+                %                 [H, W] = freqz(Karplos(A));
+                %                 plot(W, 20*log10(abs(H)));
+                
+                
+                
+            case 'butter'
+                effect = 1;
+                
+                
+                
+                
+            case 'reset'
+                effect = 0;
         end
-    end
-
-f=0.0;
-    function FsoundSelection(hObject,eventdata)
-        F=get(eventdata.NewValue,'String');
         
-        switch F
-            case 'S O U N D 1'
-                f=0.0;
-            case 'S O U N D 2'
-                f=0.2;
-            case 'S O U N D 3'
-                f=0.3;
-            case 'S O U N D 4'
-                f=0.4;
-            case 'S O U N D 5'
-                f=0.8;
-        end
     end
 
     function y = Karplos(theNote)
-        delay = round(Fs/theNote);
-        x = zeros(Fs*4, 1);
-        b  = firls(42, [0 1/delay 2/delay 1], [0 0 1 1]);
-        a  = [1 zeros(1, delay) -0.5 -0.5];
-        zi = rand(max(length(b),length(a))-1,1);
-        y = filter(b, a, x, zi);
+        
+        if effect == 0
+            delay = round(Fs/theNote);
+            x = zeros(Fs*4, 1);
+            b  = firls(42, [0 1/delay 2/delay 1], [0 0 1 1]);
+            a  = [1 zeros(1, delay) -0.5 -0.5];
+            zi = rand(max(length(b),length(a))-1,1);
+            y = filter(b, a, x, zi);
+            
+        end
+        if effect == 1
+            delay = round(Fs/theNote);
+            x = zeros(Fs*4, 1);
+            b  = firls(42, [0 1/delay 2/delay 1], [0 0 1 1]);
+            a  = [1 zeros(1, delay) -0.5 -0.5];
+            zi = rand(max(length(b),length(a))-1,1);
+            Ys = filter(b, a, x, zi);
+            [k, l] = butter(6,fc/(Fs/2));
+            y = filter(k, l, Ys);
+            
+        end
+        if effect == 2
+            delay = round(Fs/theNote);
+            x = zeros(Fs*4, 1);
+            b  = firls(42, [0 1/delay 2/delay 1], [0 0 1 1]);
+            a  = [1 zeros(1, delay) -0.5 -0.5];
+            zi = rand(max(length(b),length(a))-1,1);
+            Ys = filter(b, a, x, zi);
+            for i = 1:length(Ys)
+                y = Ys(i+fDelay+round(range*sin(2*pi*i*sweep_freq/Fs)));
+            end
+            
+        end
     end
 
     function NoteSelection(hObject,eventdata)
         N=get(eventdata.NewValue,'String');
+        
         switch N
             case 'E'
                 sound(Karplos(E), Fs);
+                CurrentNote(E);
             case 'A'
                 sound(Karplos(A), Fs);
+                CurrentNote(A);
             case 'D'
                 sound(Karplos(D), Fs);
+                CurrentNote(D);
             case 'G'
                 sound(Karplos(G), Fs);
+                CurrentNote(G);
             case 'B'
                 sound(Karplos(B), Fs);
+                CurrentNote(B);
             case 'Eh'
                 sound(Karplos(Eh), Fs);
+                CurrentNote(Eh);
                 
         end
+        
     end
 end
