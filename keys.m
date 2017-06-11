@@ -12,6 +12,25 @@ keycolor2=[1.0,1.0,1.0];
 keycolor3=[0.0,0.0,0.0];
 keycolor4=[0.0,0.0,0.0];
 
+Fs = 44100;
+A  = 110;
+E  = 82;
+D  = 147;
+G  = 196;
+B  = 247;
+Eh  = 330;
+
+
+i= 1;
+key = 0;
+f = gcf;
+
+F = linspace(1/Fs, 1000, 2^12);
+
+
+
+
+
 % FIGURE
 hFigure=figure(...
 'Units','Pixels',...
@@ -28,7 +47,7 @@ hbuttonGroup=uibuttongroup(...
 'Units','Pixels',...
 'Position',[0 301 831 25],...
 'BackgroundColor',[0,0,0],...
-'SelectionChangeFcn',@timeSelection_callback);
+'SelectionChangeFcn',@TimeSelection);
 
 time1=uicontrol(...
 'Style','togglebutton',...
@@ -87,7 +106,7 @@ hbuttonGroup2=uibuttongroup(...
 'Units','Pixels',...
 'Position',[0 326 831 25],...
 'BackgroundColor',[0,0,0],...
-'SelectionChangeFcn',@fsoundSelection_callback);
+'SelectionChangeFcn',@FsoundSelection);
 
 snd1=uicontrol(...
 'Style','togglebutton',...
@@ -145,7 +164,7 @@ hButtonGroup=uibuttongroup(...
 'Units','Pixels',...
 'Position',[0 0 831 300],...
 'BackgroundColor',[0,0,0],...
-'SelectionChangeFcn',@noteSelection_callback);
+'SelectionChangeFcn',@noteSelection);
 
 % WHITE KEYS (t1 - t15)
 t1=uicontrol(...
@@ -400,7 +419,7 @@ t25=uicontrol(...
 
 % FUNCTIONS
 t=0.6;
-function timeSelection_callback(hObject,eventdata)
+    function TimeSelection(hObject,eventdata)
 T=get(eventdata.NewValue,'String');
 
 switch T
@@ -418,7 +437,7 @@ end
 end % END OF TIME FUNCTION
 
 f=0.0;
-function fsoundSelection_callback(hObject,eventdata)
+    function FsoundSelection(hObject,eventdata)
 F=get(eventdata.NewValue,'String');
 
 switch F
@@ -435,29 +454,32 @@ f=0.8;
 end
 end % END OF FSOUND FUNCTION
 
-function noteSelection_callback(hObject,eventdata)
+    function y = Karplos(theNote)
+        delay = round(Fs/theNote);
+        x = zeros(Fs*4, 1);
+        b  = firls(42, [0 1/delay 2/delay 1], [0 0 1 1]);
+        a  = [1 zeros(1, delay) -0.5 -0.5];
+        zi = rand(max(length(b),length(a))-1,1);
+        y = filter(b, a, x, zi);
+    end
+
+function noteSelection(hObject,eventdata)
 N=get(eventdata.NewValue,'String');
 x=linspace(0,t*30*pi,t*5000);
 
 switch N
 case 'C3'
-y=sin(0.5*10.65*x)+f*sin(0.5*(10.65+f)*x);
-sound(y)
+sound(Karplos(E), Fs);
 case 'D3'
-y=sin(0.5*11.95*x)+f*sin(0.5*(11.95+f)*x);
-sound(y)
+sound(Karplos(A), Fs);
 case 'E3'
-y=sin(0.5*13.4*x)+f*sin(0.5*(13.4+f)*x);
-sound(y)
+sound(Karplos(D), Fs);
 case 'F3'
-y=sin(0.5*14.2*x)+f*sin(0.5*(14.2+f)*x);
-sound(y)
+sound(Karplos(G), Fs);
 case 'G3'
-y=sin(0.5*15.95*x)+f*sin(0.5*(15.95+f)*x);
-sound(y)
+sound(Karplos(B), Fs);
 case 'A3'
-y=sin(8.95*x)+f*sin((8.95+f)*x);
-sound(y)
+sound(Karplos(Eh), Fs);
 case 'B3'
 y=sin(10.05*x)+f*sin((10.05+f)*x);
 sound(y)
