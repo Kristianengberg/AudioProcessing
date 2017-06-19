@@ -186,8 +186,8 @@ t6=uicontrol(...
     end
 
 
-    function  [x,y] = Plotter
-        delay = round(Fs/A);
+    function  [x,y] = Plotter(a)
+        delay = round(Fs/a);
         x  = firls(42, [0 1/delay 2/delay 1], [0 0 1 1]);
         y  = [1 zeros(1, delay) -0.5 -0.5];
     end
@@ -198,18 +198,21 @@ t6=uicontrol(...
         switch T
             case 'plot'
                 
-                [x, y] = Plotter;
-                f1 = figure;
-                [H,W] = freqz(x, y, F, Fs);
-                plot(W, 20*log10(abs(H)));
-                title('Harmonics of an open A string');
-                xlabel('Frequency (Hz)');
-                ylabel('Magnitude (dB)');
+                %                 [x, y] = Plotter(Eh);
                 %                 f1 = figure;
-                %                 [H, W] = freqz(Karplos(A));
+                %                 [H,W] = freqz(x, y, F, Fs);
                 %                 plot(W, 20*log10(abs(H)));
+                %                 title('Harmonics of an open A string');
+                %                 xlabel('Frequency (Hz)');
+                %                 ylabel('Magnitude (dB)');
                 
                 
+                
+                
+                for i = 1:10000
+                    SPECTANLZR(Karplos(A));
+                end
+       
                 
             case 'butter'
                 effect = 1;
@@ -231,18 +234,24 @@ t6=uicontrol(...
             b  = firls(42, [0 1/delay 2/delay 1], [0 0 1 1]);
             a  = [1 zeros(1, delay) -0.5 -0.5];
             zi = rand(max(length(b),length(a))-1,1);
+           
+            
             y = filter(b, a, x, zi);
+            
+           
+         
             
         end
         if effect == 1
             delay = round(Fs/theNote);
             x = zeros(Fs*4, 1);
             b  = firls(42, [0 1/delay 2/delay 1], [0 0 1 1]);
-            a  = [1 zeros(1, delay) -0.5 -0.5];
+            a  = [5 zeros(1, delay) -0.5 -0.5];
             zi = rand(max(length(b),length(a))-1,1);
             Ys = filter(b, a, x, zi);
-            [k, l] = butter(6,fc/(Fs/2));
+            [k, l] = butter(4,fc/(Fs/2));
             y = filter(k, l, Ys);
+         
             
         end
         if effect == 2
@@ -251,10 +260,8 @@ t6=uicontrol(...
             b  = firls(42, [0 1/delay 2/delay 1], [0 0 1 1]);
             a  = [1 zeros(1, delay) -0.5 -0.5];
             zi = rand(max(length(b),length(a))-1,1);
-            Ys = filter(b, a, x, zi);
-            for i = 1:length(Ys)
-                y = Ys(i+fDelay+round(range*sin(2*pi*i*sweep_freq/Fs)));
-            end
+            y = filter(b, a, x, zi);
+           
             
         end
     end
