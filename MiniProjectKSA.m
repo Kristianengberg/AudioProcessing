@@ -246,10 +246,10 @@ t6=uicontrol(...
             delay = round(Fs/theNote);
             x = zeros(Fs*4, 1);
             b  = firls(42, [0 1/delay 2/delay 1], [0 0 1 1]);
-            a  = [5 zeros(1, delay) -0.5 -0.5];
+            a  = [1 zeros(1, delay) -0.5 -0.5];
             zi = rand(max(length(b),length(a))-1,1);
             Ys = filter(b, a, x, zi);
-            [k, l] = butter(4,fc/(Fs/2));
+            [k, l] = butter(6,fc/(Fs/2));
             y = filter(k, l, Ys);
          
             
